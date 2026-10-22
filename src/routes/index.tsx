@@ -69,6 +69,7 @@ function Index() {
       const id = window.setTimeout(() => mapRef.current?.scrollToIndex(quest.completed, false), 50);
       return () => window.clearTimeout(id);
     }
+    return undefined;
     // only on launch
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [launched]);
@@ -119,11 +120,11 @@ function Index() {
     );
   }
 
-  const selectedCp = selected !== null ? quest.checkpoints[selected] : null;
+  const selectedCp = selected !== null ? (quest.checkpoints[selected] ?? null) : null;
 
   const saveDraft = (draft: CheckpointDraft) => {
     if (selected === null) return quest;
-    const next = updateCheckpoint(quest, quest.checkpoints[selected].id, draft);
+    const next = updateCheckpoint(quest, quest.checkpoints[selected]!.id, draft);
     setQuest(next);
     return next;
   };

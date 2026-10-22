@@ -76,8 +76,8 @@ describe("quest rules", () => {
 
   it("editing a mission does not change progress", () => {
     const q = completeN(2);
-    const edited = updateCheckpoint(q, q.checkpoints[5].id, { title: "Nova" });
+    const edited = updateCheckpoint(q, q.checkpoints[5]!.id, { title: "Nova" });
     expect(edited.completed).toBe(2);
-    expect(edited.checkpoints[5].title).toBe("Nova");
+    expect(edited.checkpoints[5]!.title).toBe("Nova");
   });
 });
