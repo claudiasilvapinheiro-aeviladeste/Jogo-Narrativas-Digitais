@@ -294,7 +294,9 @@ export function nodePosition(index: number): { x: number; y: number } {
   const z = Math.floor(index / MISSIONS_PER_ZONE);
   const i = index % MISSIONS_PER_ZONE;
   const x = z * ZONE_WIDTH + 150 + i * 190;
-  const y = 345 + Math.round(115 * Math.sin(index * 0.85 + 0.6));
+  const wave = Math.sin(index * 0.85 + 0.6);
+  // The forest illustration's meadow sits low in the picture, so keep the trail on the grass there.
+  const y = z === 0 ? 450 + Math.round(45 * wave) : 345 + Math.round(115 * wave);
   return { x, y };
 }
 
