@@ -158,9 +158,9 @@ export const RealmMap = forwardRef<RealmMapHandle, Props>(function RealmMap(
             d={d}
             fill="none"
             stroke="var(--trail-edge)"
-            strokeOpacity={0.3}
-            strokeWidth={20}
-            strokeDasharray="4 18 2 26"
+            strokeOpacity={0.35}
+            strokeWidth={5}
+            strokeDasharray="0.5 17 0.5 29"
             strokeLinecap="round"
           />
           <path
