@@ -246,7 +246,7 @@ export const RealmMap = forwardRef<RealmMapHandle, Props>(function RealmMap(
             const { x, y } = points[i]!;
             const zone = ZONES.find((z) => z.id === cp.zone)!;
             const label = `Semana ${cp.week}: ${cp.title.trim() || "missão por escrever"} — ${zone.shortName} — ${STATUS_LABEL[status]}`;
-            const below = i % 2 === 0;
+            const below = i % 2 === 0 || i === mascotIndex;
             return (
               <li
                 key={cp.id}
