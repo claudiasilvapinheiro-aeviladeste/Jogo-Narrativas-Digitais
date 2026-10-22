@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { Check, Lock, Sparkles, Star } from "lucide-react";
 
 import mascot from "@/assets/mascot-owl.png";
@@ -299,7 +299,7 @@ export const RealmMap = forwardRef<RealmMapHandle, Props>(function RealmMap(
                     {
                       "--tx": `${Math.cos(angle) * dist}px`,
                       "--ty": `${Math.sin(angle) * dist}px`,
-                    } as React.CSSProperties
+                    } as CSSProperties
                   }
                 />
               );

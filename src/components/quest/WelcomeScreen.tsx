@@ -1,4 +1,4 @@
-import { Map, Sparkles, Star, Wand2 } from "lucide-react";
+import { Map as MapIcon, Sparkles, Star, Wand2 } from "lucide-react";
 
 import mascot from "@/assets/mascot-owl.png";
 import { ZONES } from "@/lib/quest";
@@ -47,7 +47,7 @@ export function WelcomeScreen({ onLaunch, resumeWeek }: Props) {
 
           <div className="mt-8 flex flex-col items-start gap-3">
             <TactileButton variant="primary" size="xl" onClick={onLaunch} autoFocus>
-              <Map aria-hidden className="size-6" />
+              <MapIcon aria-hidden className="size-6" />
               {resumeWeek ? `Continuar Aventura (Semana ${resumeWeek})` : "Começar a Aventura da Turma (Sem Preparação)"}
             </TactileButton>
             <p className="flex items-center gap-2 text-[13px] font-semibold text-muted-foreground">
