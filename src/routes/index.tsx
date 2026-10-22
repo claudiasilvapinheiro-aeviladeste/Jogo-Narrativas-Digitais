@@ -16,6 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { CheckpointModal, type CheckpointDraft } from "@/components/quest/CheckpointModal";
 import { QuestCompleteDialog } from "@/components/quest/QuestCompleteDialog";
+import { QuizDialog } from "@/components/quest/QuizDialog";
 import { RealmMap, useDissolvingZones, type RealmMapHandle } from "@/components/quest/RealmMap";
 import { TactileButton } from "@/components/quest/TactileButton";
 import { WelcomeScreen } from "@/components/quest/WelcomeScreen";
@@ -25,6 +26,7 @@ import {
   COPY,
   ZONES,
   blankParchment,
+  checkReady,
   completeActive,
   isParchmentEmpty,
   restartJourney,
@@ -61,6 +63,7 @@ function Index() {
   const [selected, setSelected] = useState<number | null>(null);
   const [celebrate, setCelebrate] = useState(false);
   const [confirm, setConfirm] = useState<Confirm>(null);
+  const [quizOpen, setQuizOpen] = useState(false);
   const mapRef = useRef<RealmMapHandle>(null);
   const { zones: dissolvingZones, dissolve } = useDissolvingZones();
 
@@ -80,16 +83,28 @@ function Index() {
     }
   }, [imagesNotSaved]);
 
-  const runComplete = useCallback(
+  // Step 1: the class must answer the mission's quiz before it can be completed.
+  const startQuiz = useCallback(
     (base = quest) => {
-      const result = completeActive(base);
-      if (!result.ok) {
-        if (result.reason === "missing-task") {
-          toast.error(COPY.missingTask);
-          setSelected(base.completed);
-        }
+      const reason = checkReady(base);
+      if (reason === "missing-task" || reason === "missing-quiz") {
+        toast.error(reason === "missing-task" ? COPY.missingTask : COPY.missingQuiz);
+        setSelected(base.completed);
         return;
       }
+      if (reason) return;
+      setSelected(null);
+      setQuizOpen(true);
+    },
+    [quest],
+  );
+
+  // Step 2: quiz passed — complete the mission and move the party along.
+  const runComplete = useCallback(
+    (base = quest) => {
+      const result = completeActive(base, { quizPassed: true });
+      setQuizOpen(false);
+      if (!result.ok) return;
       setQuest(result.state);
       setSelected(null);
       mapRef.current?.burstAt(result.completedIndex);
@@ -165,7 +180,7 @@ function Index() {
 
       <WonderScoreDock
         quest={quest}
-        onComplete={() => runComplete()}
+        onComplete={() => startQuiz()}
         onOpenActive={() => setSelected(quest.completed)}
       />
 
@@ -179,7 +194,14 @@ function Index() {
           setSelected(null);
           toast.success("Missão guardada no pergaminho! 📜");
         }}
-        onComplete={(draft) => runComplete(saveDraft(draft))}
+        onComplete={(draft) => startQuiz(saveDraft(draft))}
+      />
+
+      <QuizDialog
+        open={quizOpen}
+        checkpoint={quest.checkpoints[quest.completed] ?? null}
+        onOpenChange={setQuizOpen}
+        onPassed={() => runComplete()}
       />
 
       <QuestCompleteDialog
