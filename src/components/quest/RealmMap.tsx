@@ -130,26 +130,47 @@ export const RealmMap = forwardRef<RealmMapHandle, Props>(function RealmMap(
           <g transform={`translate(${ZONE_WIDTH * 2} 0)`}>
             <CitadelArt />
           </g>
-          {/* Trail */}
-          <path d={d} fill="none" stroke="var(--trail-edge)" strokeWidth={30} strokeLinecap="round" />
-          <path ref={pathRef} d={d} fill="none" stroke="var(--trail)" strokeWidth={22} strokeLinecap="round" />
+          {/* Trail: a soft, earthy footpath */}
+          <defs>
+            <filter id="trail-soft" x="-5%" y="-50%" width="110%" height="200%">
+              <feGaussianBlur stdDeviation="5" />
+            </filter>
+          </defs>
           <path
             d={d}
             fill="none"
-            stroke="var(--highlight)"
-            strokeWidth={8}
+            stroke="var(--trail-edge)"
+            strokeOpacity={0.45}
+            strokeWidth={44}
             strokeLinecap="round"
-            strokeDasharray={lengths ? `${completedLength} 999999` : "0 999999"}
-            style={{ transition: "stroke-dasharray 1.4s var(--ease-smooth)" }}
+            filter="url(#trail-soft)"
+          />
+          <path
+            ref={pathRef}
+            d={d}
+            fill="none"
+            stroke="var(--trail)"
+            strokeOpacity={0.92}
+            strokeWidth={28}
+            strokeLinecap="round"
           />
           <path
             d={d}
             fill="none"
-            stroke="var(--card)"
-            strokeWidth={3}
-            strokeDasharray="2 16"
+            stroke="var(--trail-edge)"
+            strokeOpacity={0.35}
+            strokeWidth={5}
+            strokeDasharray="0.5 17 0.5 29"
             strokeLinecap="round"
-            opacity={0.8}
+          />
+          <path
+            d={d}
+            fill="none"
+            stroke="var(--highlight)"
+            strokeWidth={7}
+            strokeLinecap="round"
+            strokeDasharray={lengths ? `${completedLength} 999999` : "0 999999"}
+            style={{ transition: "stroke-dasharray 1.4s var(--ease-smooth)" }}
           />
         </svg>
 
@@ -233,9 +254,9 @@ export const RealmMap = forwardRef<RealmMapHandle, Props>(function RealmMap(
           <img
             src={mascot}
             alt=""
-            width={96}
-            height={96}
-            className="absolute -left-12 bottom-8 size-24 max-w-none drop-shadow-lg"
+            width={128}
+            height={128}
+            className="absolute -left-16 bottom-7 size-32 max-w-none drop-shadow-lg"
           />
         </div>
 

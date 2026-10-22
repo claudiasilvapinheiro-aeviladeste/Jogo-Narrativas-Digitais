@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   blankParchment,
+  checkReady,
+  playableQuiz,
   completeActive,
   createInitialQuest,
   isZoneUnlocked,
@@ -14,7 +16,7 @@ import {
 function completeN(n: number) {
   let q = createInitialQuest();
   for (let i = 0; i < n; i++) {
-    const r = completeActive(q);
+    const r = completeActive(q, { quizPassed: true });
     if (!r.ok) throw new Error("expected ok");
     q = r.state;
   }
@@ -42,7 +44,7 @@ describe("quest rules", () => {
 
   it("refuses to complete a mission with no task written", () => {
     const q = blankParchment(createInitialQuest());
-    const r = completeActive(q);
+    const r = completeActive(q, { quizPassed: true });
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.reason).toBe("missing-task");
   });
@@ -51,7 +53,7 @@ describe("quest rules", () => {
     expect(scoreFor(1)).toBe(50);
     expect(scoreFor(10)).toBe(650);
     const q = completeN(9);
-    const r = completeActive(q);
+    const r = completeActive(q, { quizPassed: true });
     expect(r.ok && r.pointsEarned).toBe(200);
     expect(r.ok && r.zoneEntered).toBe("caverns");
   });
@@ -63,9 +65,9 @@ describe("quest rules", () => {
 
   it("finishes the quest after 30 missions", () => {
     const q = completeN(29);
-    const r = completeActive(q);
+    const r = completeActive(q, { quizPassed: true });
     expect(r.ok && r.questComplete).toBe(true);
-    expect(completeActive(completeN(30)).ok).toBe(false);
+    expect(completeActive(completeN(30), { quizPassed: true }).ok).toBe(false);
   });
 
   it("rejects worksheet images over 10MB", () => {
@@ -79,5 +81,31 @@ describe("quest rules", () => {
     const edited = updateCheckpoint(q, q.checkpoints[5]!.id, { title: "Nova" });
     expect(edited.completed).toBe(2);
     expect(edited.checkpoints[5]!.title).toBe("Nova");
+  });
+
+  it("cannot complete a mission until the quiz has been passed", () => {
+    const r = completeActive(createInitialQuest(), { quizPassed: false });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.reason).toBe("quiz-required");
+  });
+
+  it("every example mission comes with a 3-question quiz", () => {
+    const q = createInitialQuest();
+    expect(q.checkpoints.every((c) => playableQuiz(c).length === 3)).toBe(true);
+  });
+
+  it("a mission with no valid quiz question cannot start the quiz", () => {
+    const q = createInitialQuest();
+    const noQuiz = updateCheckpoint(q, q.checkpoints[0]!.id, {
+      quiz: [{ question: "Pergunta?", options: ["", "", ""], answer: 0 }],
+    });
+    expect(checkReady(noQuiz)).toBe("missing-quiz");
+    expect(checkReady(q)).toBeNull();
+  });
+
+  it("keeps the right answer when blank options are skipped", () => {
+    const [pq] = playableQuiz({ quiz: [{ question: "2+2?", options: ["", "3", "4"], answer: 2 }] });
+    expect(pq!.options).toEqual(["3", "4"]);
+    expect(pq!.options[pq!.answer]).toBe("4");
   });
 });

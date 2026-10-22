@@ -16,6 +16,7 @@ import {
   type CheckpointStatus,
   type PresetId,
 } from "@/lib/quest";
+import { QuizEditor } from "./QuizEditor";
 import { TactileButton } from "./TactileButton";
 import { BadgeTag } from "./WonderCard";
 
@@ -25,7 +26,7 @@ const PRESET_ICON: Record<PresetId, typeof Calculator> = {
   science: FlaskConical,
 };
 
-export type CheckpointDraft = Pick<Checkpoint, "title" | "description" | "preset" | "image" | "imageName">;
+export type CheckpointDraft = Pick<Checkpoint, "title" | "description" | "preset" | "image" | "imageName" | "quiz">;
 
 interface Props {
   open: boolean;
@@ -43,6 +44,7 @@ export function CheckpointModal({ open, onOpenChange, checkpoint, status, onSave
     preset: null,
     image: null,
     imageName: null,
+    quiz: [],
   });
   const [error, setError] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -57,6 +59,7 @@ export function CheckpointModal({ open, onOpenChange, checkpoint, status, onSave
         preset: checkpoint.preset,
         image: checkpoint.image,
         imageName: checkpoint.imageName,
+        quiz: checkpoint.quiz.map((q) => ({ ...q, options: [...q.options] })),
       });
       setError(null);
       setUploadError(null);
@@ -254,7 +257,9 @@ export function CheckpointModal({ open, onOpenChange, checkpoint, status, onSave
           )}
         </div>
 
-        <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
+        <QuizEditor quiz={draft.quiz} onChange={(quiz) => setDraft((d) => ({ ...d, quiz }))} />
+
+        <div className="sticky bottom-0 -mx-6 flex flex-col-reverse gap-3 border-t-2 border-card-border bg-card px-6 pt-4 sm:-mx-8 sm:flex-row sm:justify-end sm:px-8">
           <TactileButton
             variant="parchment"
             size="lg"
@@ -272,7 +277,7 @@ export function CheckpointModal({ open, onOpenChange, checkpoint, status, onSave
                 if (validate()) onComplete(draft);
               }}
             >
-              Marcar Missão como Concluída
+              Fazer o Quiz e Concluir
             </TactileButton>
           )}
         </div>

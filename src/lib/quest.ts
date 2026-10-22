@@ -1,5 +1,9 @@
 // Pure game rules for the classroom quest. No React, no browser APIs.
 
+import { sampleQuiz, type QuizQuestion } from "./quest-quizzes";
+
+export type { QuizQuestion };
+
 export type ZoneId = "forest" | "caverns" | "citadel";
 export type PresetId = "math" | "reading" | "science";
 export type CheckpointStatus = "locked" | "active" | "completed";
@@ -21,6 +25,7 @@ export interface Checkpoint {
   image: string | null; // data URL of the uploaded worksheet
   imageName: string | null;
   lore: string;
+  quiz: QuizQuestion[]; // must be answered correctly before the mission can be completed
 }
 
 export interface QuestState {
@@ -129,6 +134,7 @@ export function createInitialQuest(className = "4.º B"): QuestState {
       image: null,
       imageName: null,
       lore,
+      quiz: sampleQuiz(i),
     })),
   };
 }
@@ -167,8 +173,45 @@ export function hasTask(cp: Pick<Checkpoint, "description">): boolean {
   return cp.description.trim().length > 0;
 }
 
+export const MAX_QUIZ_QUESTIONS = 5;
+
+export function isValidQuestion(q: QuizQuestion): boolean {
+  return (
+    q.question.trim().length > 0 &&
+    q.options.filter((o) => o.trim().length > 0).length >= 2 &&
+    (q.options[q.answer] ?? "").trim().length > 0
+  );
+}
+
+/** The questions students will actually see (incomplete ones are skipped). */
+export function playableQuiz(cp: Pick<Checkpoint, "quiz">): QuizQuestion[] {
+  return cp.quiz.filter(isValidQuestion).map((q) => {
+    const kept = q.options.map((o, i) => ({ o: o.trim(), i })).filter((x) => x.o.length > 0);
+    return {
+      question: q.question.trim(),
+      options: kept.map((x) => x.o),
+      answer: kept.findIndex((x) => x.i === q.answer),
+    };
+  });
+}
+
+export function isCorrectAnswer(q: QuizQuestion, choice: number): boolean {
+  return choice === q.answer;
+}
+
+export type NotReadyReason = "missing-task" | "missing-quiz" | "already-complete";
+
+/** Can the class start the quiz for this week's mission? */
+export function checkReady(state: QuestState): NotReadyReason | null {
+  if (isQuestComplete(state)) return "already-complete";
+  const cp = state.checkpoints[state.completed]!;
+  if (!hasTask(cp)) return "missing-task";
+  if (playableQuiz(cp).length === 0) return "missing-quiz";
+  return null;
+}
+
 export type CompleteResult =
-  | { ok: false; reason: "missing-task" | "already-complete" }
+  | { ok: false; reason: NotReadyReason | "quiz-required" }
   | {
       ok: true;
       state: QuestState;
@@ -179,11 +222,15 @@ export type CompleteResult =
       questComplete: boolean;
     };
 
-export function completeActive(state: QuestState): CompleteResult {
-  if (isQuestComplete(state)) return { ok: false, reason: "already-complete" };
+export function completeActive(
+  state: QuestState,
+  opts: { quizPassed: boolean },
+): CompleteResult {
+  const notReady = checkReady(state);
+  if (notReady) return { ok: false, reason: notReady };
+  if (!opts.quizPassed) return { ok: false, reason: "quiz-required" };
   const index = state.completed;
   const cp = state.checkpoints[index]!;
-  if (!hasTask(cp)) return { ok: false, reason: "missing-task" };
 
   const nextCompleted = index + 1;
   const next: QuestState = { ...state, completed: nextCompleted };
@@ -206,7 +253,7 @@ export function completeActive(state: QuestState): CompleteResult {
 export function updateCheckpoint(
   state: QuestState,
   id: string,
-  patch: Partial<Pick<Checkpoint, "title" | "description" | "preset" | "image" | "imageName">>,
+  patch: Partial<Pick<Checkpoint, "title" | "description" | "preset" | "image" | "imageName" | "quiz">>,
 ): QuestState {
   return {
     ...state,
@@ -229,6 +276,7 @@ export function blankParchment(state: QuestState): QuestState {
       preset: null,
       image: null,
       imageName: null,
+      quiz: [],
     })),
   };
 }
@@ -257,7 +305,11 @@ export function parseSavedQuest(raw: string | null): QuestState | null {
       version: 1,
       className: typeof data.className === "string" ? data.className : "4.º B",
       completed,
-      checkpoints: data.checkpoints as Checkpoint[],
+      // Older saves have no quiz yet: give those missions the sample quiz.
+      checkpoints: (data.checkpoints as Checkpoint[]).map((cp, i) => ({
+        ...cp,
+        quiz: Array.isArray(cp.quiz) ? cp.quiz : sampleQuiz(i),
+      })),
     };
   } catch {
     return null;
@@ -271,6 +323,7 @@ export const COPY = {
   network: "Um duende travesso emaranhou os fios da bússola! Vamos tentar outra vez.",
   uploadTooLarge: "Esse pergaminho é pesado demais para a nossa coruja-correio (Limite: 10MB).",
   uploadNotImage: "A coruja-correio só transporta imagens (JPG, PNG, GIF ou WebP).",
+  missingQuiz: "Esta missão ainda não tem quiz! Escreve pelo menos uma pergunta e marca a resposta certa.",
   checkpointCleared: "Hurra! Missão concluída! O trilho revela um novo segredo! ✨",
   zoneEntered: (cls: string, zone: string) =>
     `Que trabalho de equipa incrível! A turma ${cls} entrou n${zone.startsWith("A ") ? "a" : "as"} ${zone.replace(/^(A|As) /, "")}!`,
@@ -290,13 +343,27 @@ export const ZONE_WIDTH = 2000;
 export const MAP_HEIGHT = 600;
 export const MAP_WIDTH = ZONE_WIDTH * ZONES.length;
 
+// Hand-placed stops so the forest trail winds naturally across the meadow in the illustration.
+const FOREST_POINTS: { x: number; y: number }[] = [
+  { x: 170, y: 512 },
+  { x: 365, y: 478 },
+  { x: 560, y: 505 },
+  { x: 745, y: 455 },
+  { x: 915, y: 405 },
+  { x: 1110, y: 418 },
+  { x: 1300, y: 462 },
+  { x: 1495, y: 436 },
+  { x: 1695, y: 474 },
+  { x: 1880, y: 512 },
+];
+
 export function nodePosition(index: number): { x: number; y: number } {
+  const forest = FOREST_POINTS[index];
+  if (forest) return forest;
   const z = Math.floor(index / MISSIONS_PER_ZONE);
   const i = index % MISSIONS_PER_ZONE;
   const x = z * ZONE_WIDTH + 150 + i * 190;
-  const wave = Math.sin(index * 0.85 + 0.6);
-  // The forest illustration's meadow sits low in the picture, so keep the trail on the grass there.
-  const y = z === 0 ? 450 + Math.round(45 * wave) : 345 + Math.round(115 * wave);
+  const y = 345 + Math.round(115 * Math.sin(index * 0.85 + 0.6));
   return { x, y };
 }
 
