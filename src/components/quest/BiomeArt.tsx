@@ -1,3 +1,4 @@
+import forestBg from "@/assets/forest-whispering.jpg";
 import { MAP_HEIGHT, ZONE_WIDTH } from "@/lib/quest";
 
 // Decorative storybook scenery for each zone. Purely visual (aria-hidden by parent).
@@ -8,48 +9,40 @@ function seeded(n: number) {
 }
 
 export function ForestArt() {
-  const trees = Array.from({ length: 26 }, (_, i) => ({
-    x: 30 + i * 76 + seeded(i) * 30,
-    y: i % 2 === 0 ? 110 + seeded(i + 3) * 40 : 520 + seeded(i + 7) * 40,
-    s: 0.8 + seeded(i + 11) * 0.6,
-  }));
   return (
     <g>
+      <defs>
+        <radialGradient id="firefly-glow">
+          <stop offset="0%" stopColor="var(--gold)" stopOpacity={1} />
+          <stop offset="100%" stopColor="var(--gold)" stopOpacity={0} />
+        </radialGradient>
+      </defs>
       <rect x={0} y={0} width={ZONE_WIDTH} height={MAP_HEIGHT} fill="var(--forest-sky)" />
-      <path
-        d={`M0 470 Q 300 400 600 460 T 1200 450 T 2000 440 V ${MAP_HEIGHT} H 0 Z`}
-        fill="var(--forest-hill)"
-        opacity={0.7}
+      <image
+        href={forestBg}
+        x={0}
+        y={0}
+        width={ZONE_WIDTH}
+        height={MAP_HEIGHT}
+        preserveAspectRatio="xMidYMid slice"
       />
-      <path
-        d={`M0 150 Q 400 90 800 150 T 1600 140 T 2000 150 V 0 H 0 Z`}
-        fill="var(--forest-hill)"
-        opacity={0.45}
-      />
-      {trees.map((t, i) => (
-        <g key={i} transform={`translate(${t.x} ${t.y}) scale(${t.s})`}>
-          <rect x={-5} y={10} width={10} height={26} rx={3} fill="var(--forest-trunk)" />
-          <path d="M0 -44 L 28 14 H -28 Z" fill="var(--forest-deep)" />
-          <path d="M0 -62 L 22 -10 H -22 Z" fill="var(--forest-deep)" opacity={0.85} />
-        </g>
-      ))}
-      {Array.from({ length: 10 }, (_, i) => (
-        <g key={`m${i}`} transform={`translate(${120 + i * 190} ${560})`}>
-          <rect x={-3} y={0} width={6} height={12} rx={2} fill="var(--card)" />
-          <ellipse cx={0} cy={0} rx={12} ry={8} fill="var(--primary-soft)" />
-          <circle cx={-4} cy={-2} r={2} fill="var(--card)" />
-          <circle cx={4} cy={-3} r={1.6} fill="var(--card)" />
-        </g>
-      ))}
-      {Array.from({ length: 18 }, (_, i) => (
+      {/* Twinkling fireflies over the illustration */}
+      {Array.from({ length: 22 }, (_, i) => (
         <circle
           key={`f${i}`}
+          className="motion-particles"
           cx={seeded(i + 50) * ZONE_WIDTH}
-          cy={180 + seeded(i + 80) * 300}
-          r={3}
-          fill="var(--gold)"
-          opacity={0.7}
-        />
+          cy={140 + seeded(i + 80) * 380}
+          r={8 + seeded(i + 90) * 6}
+          fill="url(#firefly-glow)"
+        >
+          <animate
+            attributeName="opacity"
+            values="0.2;0.9;0.2"
+            dur={`${2.5 + seeded(i + 120) * 2.5}s`}
+            repeatCount="indefinite"
+          />
+        </circle>
       ))}
     </g>
   );
