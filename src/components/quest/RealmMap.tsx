@@ -85,8 +85,8 @@ export const RealmMap = forwardRef<RealmMapHandle, Props>(function RealmMap(
   const mascotLength = lengths?.[mascotIndex] ?? 0;
   const completedLength = lengths
     ? quest.completed >= points.length
-      ? lengths[lengths.length - 1]
-      : lengths[quest.completed]
+      ? lengths[lengths.length - 1]!
+      : lengths[quest.completed]!
     : 0;
 
   return (
@@ -225,7 +225,7 @@ export const RealmMap = forwardRef<RealmMapHandle, Props>(function RealmMap(
         <ol className="contents">
           {quest.checkpoints.map((cp, i) => {
             const status = statusOf(quest, i);
-            const { x, y } = points[i];
+            const { x, y } = points[i]!;
             const zone = ZONES.find((z) => z.id === cp.zone)!;
             const label = `Semana ${cp.week}: ${cp.title.trim() || "missão por escrever"} — ${zone.shortName} — ${STATUS_LABEL[status]}`;
             const below = i % 2 === 0;

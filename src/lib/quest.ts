@@ -121,7 +121,7 @@ export function createInitialQuest(className = "4.º B"): QuestState {
     completed: 0,
     checkpoints: SAMPLE_MISSIONS.map(([preset, title, description, lore], i) => ({
       id: `cp-${i + 1}`,
-      zone: ZONES[Math.floor(i / MISSIONS_PER_ZONE)].id,
+      zone: ZONES[Math.floor(i / MISSIONS_PER_ZONE)]!.id,
       week: i + 1,
       title,
       description,
@@ -182,7 +182,7 @@ export type CompleteResult =
 export function completeActive(state: QuestState): CompleteResult {
   if (isQuestComplete(state)) return { ok: false, reason: "already-complete" };
   const index = state.completed;
-  const cp = state.checkpoints[index];
+  const cp = state.checkpoints[index]!;
   if (!hasTask(cp)) return { ok: false, reason: "missing-task" };
 
   const nextCompleted = index + 1;
@@ -190,7 +190,7 @@ export function completeActive(state: QuestState): CompleteResult {
   const clearedZone = nextCompleted % MISSIONS_PER_ZONE === 0 ? cp.zone : null;
   const questComplete = nextCompleted === state.checkpoints.length;
   const enteredZone =
-    clearedZone && !questComplete ? state.checkpoints[nextCompleted].zone : null;
+    clearedZone && !questComplete ? state.checkpoints[nextCompleted]!.zone : null;
 
   return {
     ok: true,
@@ -301,10 +301,10 @@ export function nodePosition(index: number): { x: number; y: number } {
 /** Smooth Catmull-Rom curve through all points, as an SVG path. */
 export function trailPath(points: { x: number; y: number }[]): string {
   if (points.length < 2) return "";
-  const p = [points[0], ...points, points[points.length - 1]];
-  let d = `M ${p[1].x} ${p[1].y}`;
+  const p = [points[0]!, ...points, points[points.length - 1]!];
+  let d = `M ${p[1]!.x} ${p[1]!.y}`;
   for (let i = 1; i < p.length - 2; i++) {
-    const [p0, p1, p2, p3] = [p[i - 1], p[i], p[i + 1], p[i + 2]];
+    const [p0, p1, p2, p3] = [p[i - 1]!, p[i]!, p[i + 1]!, p[i + 2]!];
     const c1x = p1.x + (p2.x - p0.x) / 6;
     const c1y = p1.y + (p2.y - p0.y) / 6;
     const c2x = p2.x - (p3.x - p1.x) / 6;
