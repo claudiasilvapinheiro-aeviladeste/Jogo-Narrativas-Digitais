@@ -38,6 +38,20 @@ export const RealmMap = forwardRef<RealmMapHandle, Props>(function RealmMap(
   const pathRef = useRef<SVGPathElement>(null);
   const [lengths, setLengths] = useState<number[] | null>(null);
   const [bursts, setBursts] = useState<Burst[]>([]);
+  const [scale, setScale] = useState(1);
+
+  // Scale the storybook map to fill the available height (Smartboards, laptops).
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const measure = () => setScale(Math.max(0.6, Math.min(1.6, el.clientHeight / MAP_HEIGHT)));
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const scaleRef = useRef(scale);
+  scaleRef.current = scale;
 
   const points = useMemo(() => quest.checkpoints.map((_, i) => nodePosition(i)), [quest.checkpoints]);
   const d = useMemo(() => trailPath(points), [points]);
@@ -71,7 +85,7 @@ export const RealmMap = forwardRef<RealmMapHandle, Props>(function RealmMap(
       const el = scrollRef.current;
       if (!el) return;
       const { x } = nodePosition(Math.min(index, points.length - 1));
-      el.scrollTo({ left: Math.max(0, x - el.clientWidth / 2), behavior: smooth ? "smooth" : "auto" });
+      el.scrollTo({ left: Math.max(0, x * scaleRef.current - el.clientWidth / 2), behavior: smooth ? "smooth" : "auto" });
     },
     burstAt(index) {
       const { x, y } = nodePosition(index);
@@ -95,7 +109,11 @@ export const RealmMap = forwardRef<RealmMapHandle, Props>(function RealmMap(
       className="relative h-full w-full overflow-x-auto overflow-y-hidden [scrollbar-color:var(--amber)_transparent]"
       tabIndex={-1}
     >
-      <div className="relative" style={{ width: MAP_WIDTH, height: MAP_HEIGHT }}>
+      <div className="relative" style={{ width: MAP_WIDTH * scale, height: MAP_HEIGHT * scale }}>
+      <div
+        className="absolute left-0 top-0 origin-top-left"
+        style={{ width: MAP_WIDTH, height: MAP_HEIGHT, transform: `scale(${scale})` }}
+      >
         <svg
           aria-hidden
           width={MAP_WIDTH}
@@ -306,6 +324,7 @@ export const RealmMap = forwardRef<RealmMapHandle, Props>(function RealmMap(
             })}
           </div>
         ))}
+      </div>
       </div>
     </div>
   );
