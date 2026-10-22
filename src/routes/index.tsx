@@ -158,7 +158,7 @@ function Index() {
         </div>
       )}
 
-      <main className="relative flex-1 pb-36 sm:pb-32">
+      <main className="relative min-h-0 flex-1 pb-36 sm:pb-32">
         <h1 className="sr-only">Mapa da aventura da turma {quest.className}</h1>
         <RealmMap ref={mapRef} quest={quest} dissolvingZones={dissolvingZones} onSelect={setSelected} />
       </main>
