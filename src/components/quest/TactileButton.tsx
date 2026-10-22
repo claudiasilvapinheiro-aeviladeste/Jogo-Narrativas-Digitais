@@ -21,7 +21,7 @@ const tactileVariants = cva(
         sm: "h-10 px-4 text-sm",
         md: "h-12 px-5 text-[15px]",
         lg: "h-14 px-7 text-lg",
-        xl: "h-16 px-8 text-xl",
+        xl: "min-h-16 py-3 px-8 text-xl text-left",
       },
     },
     defaultVariants: { variant: "primary", size: "md" },
