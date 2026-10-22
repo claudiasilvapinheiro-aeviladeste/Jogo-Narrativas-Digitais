@@ -71,7 +71,7 @@ export function WonderScoreDock({ quest, onComplete, onOpenActive }: Props) {
           )}
           <TactileButton variant="primary" size="lg" onClick={onComplete} disabled={done}>
             <PartyPopper aria-hidden className="size-5" />
-            Marcar Missão como Concluída
+            {done ? "Aventura concluída" : "Fazer o Quiz e Concluir"}
           </TactileButton>
         </div>
       </WonderCard>
